@@ -1,0 +1,123 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <ctime>
+
+using namespace std;
+
+// Book class to represent a book
+class Book {
+public:
+    string title;
+    string author;
+    int id;
+    bool available;
+
+    Book(string t, string a, int i) : title(t), author(a), id(i), available(true) {}
+};
+
+// User class to represent a library user
+class User {
+public:
+    string name;
+    int userId;
+
+    User(string n, int id) : name(n), userId(id) {}
+};
+
+// Library class to manage library operations
+class Library {
+private:
+    vector<Book> books;
+    vector<User> users;
+
+public:
+    void registerUser(const string& name, int userId) {
+        users.emplace_back(name, userId);
+    }
+
+    void addBook(const string& title, const string& author, int id) {
+        books.emplace_back(title, author, id);
+    }
+
+    void checkOutBook(int userId, int bookId) {
+        for (Book& book : books) {
+            if (book.id == bookId && book.available) {
+                book.available = false;
+
+                // Calculate due date (7 days from now)
+                time_t now = time(0);
+                tm* dueDate = localtime(&now);
+                dueDate->tm_mday += 7;
+                mktime(dueDate);
+
+                // Save user and due date to file
+                ofstream outFile(to_string(bookId) + ".txt");
+                outFile << userId << " " << dueDate->tm_year + 1900 << "-" << dueDate->tm_mon + 1 << "-" << dueDate->tm_mday;
+                outFile.close();
+
+                cout << "Book checked out successfully. Due date: " << dueDate->tm_year + 1900 << "-" << dueDate->tm_mon + 1 << "-" << dueDate->tm_mday << endl;
+                return;
+            }
+        }
+        cout << "Book not available." << endl;
+    }
+
+    void checkInBook(int bookId) {
+        for (Book& book : books) {
+            if (book.id == bookId && !book.available) {
+                book.available = true;
+
+                // Delete user info file
+                remove((to_string(bookId) + ".txt").c_str());
+
+                cout << "Book checked in successfully." << endl;
+                return;
+            }
+        }
+        cout << "Invalid book ID or book already checked in." << endl;
+    }
+
+    void generateReport() {
+        int availableCount = 0;
+        int checkedOutCount = 0;
+
+        for (const Book& book : books) {
+            if (book.available) {
+                availableCount++;
+            } else {
+                checkedOutCount++;
+            }
+        }
+
+        cout << "Library Report:" << endl;
+        cout << "Total books: " << books.size() << endl;
+        cout << "Available books: " << availableCount << endl;
+        cout << "Checked out books: " << checkedOutCount << endl;
+    }
+};
+
+int main() {
+    Library library;
+
+    // Register users
+    library.registerUser("User 1", 1);
+    library.registerUser("User 2", 2);
+
+    // Add books
+    library.addBook("Book 1", "Author 1", 101);
+    library.addBook("Book 2", "Author 2", 102);
+
+    // Check out books
+    library.checkOutBook(1, 101);
+    library.checkOutBook(2, 102);
+
+    // Check in books
+    library.checkInBook(101);
+
+    // Generate report
+    library.generateReport();
+
+    return 0;
+}
