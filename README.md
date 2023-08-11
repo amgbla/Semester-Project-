@@ -1,4 +1,4 @@
-# Semester-Project
+# Semester-Project (LIBRARY MANAGEMENT SYSTEM)
 Osei Prince
 UEB3236222
 Bsc Information Technology 
